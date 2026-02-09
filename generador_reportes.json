@@ -1,0 +1,315 @@
+{
+  "name": "generador_reportes_clean",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "id_usuario"
+            },
+            {
+              "name": "fecha"
+            }
+          ]
+        }
+      },
+      "id": "2f255647-75ac-4422-b75c-82d439733517",
+      "typeVersion": 1.1,
+      "name": "Workflow Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1008,
+        1600
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "user_id",
+              "lookupValue": "={{ $json.id_usuario }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -784,
+        1696
+      ],
+      "id": "96094fe0-549a-456a-95be-1d3b12ff5987",
+      "name": "Get User Profile",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": ""
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 817435783,
+          "mode": "list"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "fecha",
+              "lookupValue": "={{ $json.fecha}}"
+            },
+            {
+              "lookupColumn": "user_id",
+              "lookupValue": "={{ $json.id_usuario}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -784,
+        1504
+      ],
+      "id": "a7eb9275-e863-49e4-aa63-ef09ddc3f92b",
+      "name": "Get Daily Meals",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": ""
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -560,
+        1600
+      ],
+      "id": "38aa7a6d-1e0e-40f8-8008-c1e99055e897",
+      "name": "Merge Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Todos los items que vienen del Merge\nconst items = $input.all();\n\n// Separar datos\nlet usuario = 'Usuario';\nlet objetivoCalorias = 2000;\n\nlet totalCalorias = 0;\nlet totalProteinas = 0;\nlet totalCarbs = 0;\nlet totalGrasas = 0;\n\nfor (const item of items) {\n  const d = item.json;\n\n  // Si viene del perfil\n  if (d.nombre || d.objetivo_calorias) {\n    usuario = d.nombre || usuario;\n    objetivoCalorias = Number(d.objetivo_calorias || objetivoCalorias);\n  }\n\n  // Si viene de comidas (pueden ser varias filas)\n  if (d.calorias !== undefined) {\n    totalCalorias += Number(d.calorias || 0);\n    totalProteinas += Number(d.proteinas || 0);\n    totalCarbs += Number(d.carboidratos || 0);\n    totalGrasas += Number(d.grasas || 0);\n  }\n}\n\nreturn {\n  json: {\n    chart: {\n      type: 'bar',\n      data: {\n        labels: ['Calorías', 'Proteína', 'Carbs', 'Grasas'],\n        datasets: [{\n          label: `Consumo de ${usuario}`,\n          data: [totalCalorias, totalProteinas, totalCarbs, totalGrasas]\n        }]\n      },\n      options: {\n        plugins: {\n          legend: { display: true },\n          title: {\n            display: true,\n            text: `Progreso diario de ${usuario}`\n          }\n        },\n        scales: {\n          y: {\n            beginAtZero: true,\n            max: objetivoCalorias\n          }\n        }\n      }\n    }\n  }\n};\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        1600
+      ],
+      "id": "175f4ac1-20c7-4f76-b867-014ad910f59a",
+      "name": "Calculate Stats & Config Chart"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://quickchart.io/chart",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  chart: $json.chart,\n  width: 640,\n  height: 500,\n  format: \"png\",\n  backgroundColor: \"transparent\"\n}) }}\n",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -112,
+        1600
+      ],
+      "id": "ebdad203-4644-4442-a725-7a10f83eb1fd",
+      "name": "Generate Chart Image",
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Get User Profile').first().json.user_id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        1600
+      ],
+      "id": "c229c039-c78f-4a12-acef-e8d5f94e5e25",
+      "name": "Send Telegram Photo",
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "347174ce-aa7d-4b37-850f-e63f7b04c463",
+              "name": "output",
+              "value": "=Gráfica e informe enviados exitosamente al usuario.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        1600
+      ],
+      "id": "4fe814df-ca2a-434e-acb7-2915a447b917",
+      "name": "Set Success Message"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Workflow Start": {
+      "main": [
+        [
+          {
+            "node": "Get Daily Meals",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get User Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User Profile": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Daily Meals": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Stats & Config Chart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Stats & Config Chart": {
+      "main": [
+        [
+          {
+            "node": "Generate Chart Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Chart Image": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Photo": {
+      "main": [
+        [
+          {
+            "node": "Set Success Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "f31c42ac-2bcb-476b-af63-f636943b9098",
+  "meta": {
+    "instanceId": ""
+  },
+  "id": "DRMQDWrkLMA2FcsJ",
+  "tags": [
+    {
+      "updatedAt": "2025-09-17T16:22:34.670Z",
+      "createdAt": "2025-09-17T16:22:34.670Z",
+      "id": "y0clFAjnfTqOSxdT",
+      "name": "Ivi-Projects"
+    }
+  ]
+}

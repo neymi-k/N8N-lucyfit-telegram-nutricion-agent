@@ -1,0 +1,1348 @@
+{
+  "name": "lucy_fit_cleaned",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2032,
+        -768
+      ],
+      "id": "a3f43cfb-fdc3-4dcb-91e4-6bc6b1965770",
+      "name": "Telegram Trigger",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cb4a9a4b-0324-4fcd-9deb-a257a3072948",
+              "leftValue": "={{ $json.user_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1488,
+        -672
+      ],
+      "id": "82add747-c2f7-4102-aa21-2cfb1e4a5e7e",
+      "name": "Check If User Exists"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.chat_id }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1696,
+        -176
+      ],
+      "id": "df6edf26-b951-4664-82fc-7571b13fe4af",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lucy_Fit",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "perfil",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "user_id",
+              "lookupValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1808,
+        -672
+      ],
+      "id": "79ae680d-1f45-410f-a13f-06c3bfe207b5",
+      "name": "Check User Registration",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GSHEETS_CREDENTIAL_ID",
+          "name": "YOUR_GSHEETS_ACCOUNT"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1120,
+        -1248
+      ],
+      "id": "03b5fff2-bab6-441d-9a39-980ca1f0440f",
+      "name": "Download Audio File",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "17ed6d61-006a-469c-b89b-933c2b450a60",
+              "name": "mensaje",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "d18faa07-64ac-4748-b6c4-31bb49e8e249",
+              "name": "chat_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        -1424
+      ],
+      "id": "213f9344-576c-4ac1-9c03-c2e946288415",
+      "name": "Set Text Input"
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $json.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1808,
+        -864
+      ],
+      "id": "4e2ad340-8c55-4ad7-90a0-7ceb59aa6398",
+      "name": "Send Typing Action",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.photo[$('Telegram Trigger').item.json.message.photo.length - 1].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1120,
+        -1072
+      ],
+      "id": "53ef3e58-aa89-4452-b72a-a9a17c0cce9d",
+      "name": "Download Image File",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d72b6000-7822-446d-8b6d-d8889c52a443"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a8a1aedc-b888-4b1c-b90d-1a68cb2a2581",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ba8fef2c-cc95-4222-ac0b-f097a3d41dbc",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.photo[0].file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagen"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "ignoreCase": false,
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1392,
+        -1040
+      ],
+      "id": "aeaeb230-4e6e-4cf2-8401-2e067b84b7a6",
+      "name": "Input Type Router"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fd4e3d95-a644-4ae2-a974-4702b281fab5",
+              "name": "mensaje",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "d2db1ab1-b37c-4944-94ea-227b49fae382",
+              "name": "chat_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2032,
+        -384
+      ],
+      "id": "500e2e94-99dd-4fcc-8b36-aaf1a06d75c0",
+      "name": "Set Onboarding Data"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lucy_Fit",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "perfil",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.chat_id}}",
+            "nombre": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('nombre', ``, 'string') }}",
+            "objetivo_calorias": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('objetivo_calorias', ``, 'string') }}",
+            "objetivo_proteina": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('objetivo_proteina', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "objetivo_calorias",
+              "displayName": "objetivo_calorias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "objetivo_proteina",
+              "displayName": "objetivo_proteina",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -1520,
+        -192
+      ],
+      "id": "4e73c042-7999-413a-8a9a-c2168d66c9a7",
+      "name": "Tool - Register User",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GSHEETS_CREDENTIAL_ID",
+          "name": "YOUR_GSHEETS_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=<tool_definition>\n\n<name>\nupdate_profile\n</name>\n\n<description>\nActualiza los datos y objetivos del perfil del usuario.\n</description>\n\n<parameters>\n  <param name=\"nombre\" type=\"string\" description=\"Nuevo nombre del usuario\" />\n  <param name=\"objetivo_calorias\" type=\"integer\" description=\"Nueva meta de calorías diarias\" />\n  <param name=\"objetivo_proteina\" type=\"integer\" description=\"Nueva meta de gramos de proteína\" />\n</parameters>\n\n<usage_trigger>\nUsar SOLO cuando el usuario pida explícitamente cambiar su nombre o sus metas.\n</usage_trigger>\n\n</tool_definition>",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lucy_Fit",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "perfil",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "nombre": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('nombre', ``, 'string') }}",
+            "objetivo_calorias": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('objetivo_calorias', ``, 'string') }}",
+            "objetivo_proteina": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('objetivo_proteina', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "user_id"
+          ],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "objetivo_calorias",
+              "displayName": "objetivo_calorias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "objetivo_proteina",
+              "displayName": "objetivo_proteina",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        -1168
+      ],
+      "id": "2f9f58aa-65bf-4077-8b12-e6a5cfb39899",
+      "name": "Tool - Update Profile",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GSHEETS_CREDENTIAL_ID",
+          "name": "YOUR_GSHEETS_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "=<tool_definition>\n\n<name>\nTool - Get Report\n</name>\n\n<description>\nGenera y recupera el resumen nutricional diario y la gráfica de progreso.\n</description>\n\n<parameters>\n  <param name=\"fecha\" type=\"string\" format=\"YYYY-MM-DD\" required=\"true\" description=\"Fecha del reporte. Si el usuario no especifica, usar fecha de hoy.\" />\n</parameters>\n\n<usage_trigger>\nUsar cuando el usuario solicite ver su resumen, reporte, progreso o estado del día.\n</usage_trigger>\n\n</tool_definition>",
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_SUBWORKFLOW_ID",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/YOUR_SUBWORKFLOW_ID"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_usuario": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "fecha": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fecha', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        -1168
+      ],
+      "id": "dbd18bcb-7de0-4cda-8939-2a09c64979f1",
+      "name": "Tool - Get Report"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=<tool_definition>\n\n<name>\nTool - Add Meal\n</name>\n\n<description>\nGuarda el registro nutricional de una comida en la base de datos.\n</description>\n\n<parameters>\n  <param name=\"descripcion_comida\" type=\"string\" required=\"true\" description=\"Nombre del plato o alimento\" />\n  <param name=\"calorias\" type=\"integer\" required=\"true\" />\n  <param name=\"proteinas\" type=\"integer\" required=\"true\" />\n  <param name=\"carbohidratos\" type=\"integer\" required=\"true\" />\n  <param name=\"grasas\" type=\"integer\" required=\"true\" />\n</parameters>\n\n<usage_trigger>\nEjecutar siempre que se obtenga información nutricional válida (por texto o análisis de imagen).\n</usage_trigger>\n\n</tool_definition>",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lucy_Fit",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 817435783,
+          "mode": "list",
+          "cachedResultName": "comidas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=817435783"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "fecha": "={{ $today.format('yyyy-LL-dd') }}",
+            "descripcion_comida": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('descripcion_comida', ``, 'string') }}",
+            "calorias": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('calorias', ``, 'string') }}",
+            "proteinas": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('proteinas', ``, 'string') }}",
+            "carboidratos": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('carboidratos', ``, 'string') }}",
+            "grasas": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('grasas', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "descripcion_comida",
+              "displayName": "descripcion_comida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "calorias",
+              "displayName": "calorias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "proteinas",
+              "displayName": "proteinas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "carboidratos",
+              "displayName": "carboidratos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "grasas",
+              "displayName": "grasas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        -1168
+      ],
+      "id": "ecc7c86e-ff3c-462e-9966-5c383060bb33",
+      "name": "Tool - Add Meal",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GSHEETS_CREDENTIAL_ID",
+          "name": "YOUR_GSHEETS_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "743c1cb1-4502-40b9-8727-83f91a96c28e",
+              "name": "mensaje",
+              "value": "=No fue posible procesar el archivo. El Tipo de archivo no es compatible.",
+              "type": "string"
+            },
+            {
+              "id": "634bc0aa-4b6a-438b-8c7d-ec3d80ea0360",
+              "name": "chat_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1104,
+        -896
+      ],
+      "id": "cd4aa960-5ab9-497f-aa90-7882640db5fa",
+      "name": "Handle Input Error"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        -384
+      ],
+      "id": "61cdbb51-e1bc-474c-a9fd-d507c844874f",
+      "name": "Send Onboarding Reply",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('AI Agent - Tracking').item.json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        -1408
+      ],
+      "id": "278eef44-d157-4a6b-97cb-e3dcfbf82f41",
+      "name": "Send Tracking Reply",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "=<role>\nEres un Analista Nutricional de Laboratorio con especialidad en visión artificial. Tu trabajo es identificar alimentos y estimar macronutrientes con precisión científica.\n</role>\n\n<task>\n1. Analiza la imagen recibida.\n2. Determina si contiene comida real.\n3. Si ES comida: Estima calorías y macros (redondeando hacia arriba para seguridad).\n4. Si NO es comida (ej. personas, objetos, paisajes): Marca el campo \"es_comida\" como false.\n</task>\n\n<output_format>\nDevuelve SOLAMENTE un objeto JSON válido. No incluyas bloques markdown (```json).\nEstructura obligatoria:\n{\n  \"es_comida\": boolean,\n  \"nombre_plato\": \"string corto\",\n  \"razonamiento\": \"breve explicación de la estimación\",\n  \"nutrientes\": {\n    \"calorias\": number (entero),\n    \"proteinas\": number (entero),\n    \"carbohidratos\": number (entero),\n    \"grasas\": number (entero)\n  }\n}\n</output_format>\n\n<constraints>\n- Sé conservador: estima un 10-15% extra por aceites/salsas no visibles.\n- Si no estás seguro, usa el promedio estándar para ese tipo de plato.\n</constraints>",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -1088
+      ],
+      "id": "b6a863b5-7c7e-4b11-bc17-cc4c49b8284f",
+      "name": "Vision Analysis",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_ACCOUNT"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -1264
+      ],
+      "id": "ce1c102a-09d7-4bda-8ae7-e6c28c2890e4",
+      "name": "Whisper Transcription",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_ACCOUNT"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1872,
+        -176
+      ],
+      "id": "a1b58127-98c0-492c-b7fe-069afdf27c22",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje }}",
+        "options": {
+          "systemMessage": "=<role>\nEres LucyFit AI, el sistema oficial de bienvenida y creación de perfiles de la plataforma LucyFit.\nTu personalidad es profesional, empática y motivadora, con comunicación clara y concisa.\nUsas emojis solo cuando aportan claridad o cercanía (máximo 1 por mensaje).\n</role>\n\n<objective>\nTu única misión es recopilar y confirmar la información necesaria para crear el perfil nutricional del usuario en la base de datos.\nNo realizas seguimiento nutricional ni registro de comidas.\n</objective>\n\n<data_requirements>\nDebes obtener y confirmar exactamente estos 3 datos:\n\n1. nombre (string)\n2. objetivo_calorias (integer, solo números)\n3. objetivo_proteina (integer, solo números)\n\nSi el usuario NO conoce sus objetivos:\n- Solicita: peso, altura, edad, género y objetivo principal\n  (perder grasa, ganar músculo, mantener).\n- Calcula internamente calorías y proteína usando la fórmula Mifflin-St Jeor.\n- Presenta el resultado y pide confirmación antes de registrar.\nNunca inventes datos sin confirmación.\n</data_requirements>\n\n<conversation_style>\n-Bienvenida breve: ejemplo: \"Hola, bienvenid@, el primer paso es registrarte empecemos... ¿Cual es tu nombre?\"\n- Respuestas breves y guiadas.\n- Usa listas con viñetas cuando ayude a la claridad.\n- Evita saludos repetitivos.\n- Mantén un tono humano, cercano y profesional.\n- No le digas al usuario que necesitas solo numero esto es algo interno.\n</conversation_style>\n\n<tool_usage>\nCuando los 3 datos estén confirmados:\n- Ejecuta inmediatamente la herramienta `Tool - Register User`.\n- Luego responde SOLO con:\n\n\"Registro completado.  \nTus metas: [X] kcal y [Y] g de proteína diarios 💪\"\n</tool_usage>\n\n<strict_constraints>\n-Solo registras, no hablas de ningun tema ni consejo nutricional \n- No hables de funciones internas, base de datos ni herramientas.\n- No continúes conversación nutricional tras registrar.\n- Si ocurre un error técnico, explícalo en una frase simple y vuelve a intentar.\n</strict_constraints>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -1776,
+        -384
+      ],
+      "id": "298d08a6-63fd-43cc-9882-0b4f57529415",
+      "name": "AI Agent - Onboarding"
+    },
+    {
+      "parameters": {
+        "promptType": "=define",
+        "text": "=mensaje del usuario: {{ $('Telegram Trigger').item.json.message.text }}\nimagen contiene:\n{{ $json.output[0].content[0].text }}",
+        "options": {
+          "systemMessage": "=<role>\nEres LucyFit AI, el núcleo operativo de seguimiento nutricional diario.\nMantienes la misma personalidad que el sistema de bienvenida:\nprofesional, empática, motivadora y extremadamente clara.\nUsas emojis solo cuando aportan significado (máximo 1 por mensaje).\n</role>\n\n<objective>\nGestionar el progreso nutricional del usuario mediante:\n- registro de comidas\n- consulta de reportes\n- actualización de perfil\n\nNo realizas onboarding inicial.\n</objective>\n\n<context>\nFecha actual: {{ $today.format('yyyy-MM-dd') }}\n\nMetas del usuario:\n- Calorías objetivo: {{ $('Check User Registration').item.json.objetivo_calorias }}\n- Proteínas objetivo: {{ $('Check User Registration').item.json.objetivo_proteina }}\n</context>\n\n<tools_instruction>\n\n1. Tool - Add Meal\nCUÁNDO:\n- Después de recibir información nutricional válida\n  (texto del usuario o análisis de imagen).\n\nACCIÓN:\n- Extrae nombre, calorías, proteínas, carbohidratos y grasas.\n- Ejecuta inmediatamente la herramienta.\n\nRESPUESTA:\n\"✅ Registrado: [Comida] ([Cal] kcal).\"\n\n---\n\n2. Tool - Get Report\nCUÁNDO:\n- El usuario pide resumen, reporte, progreso, gráfica\n  o estado del día.\n\nACCIÓN:\n- Ejecuta la herramienta sin pedir datos extra\n  (si falta fecha, usa hoy).\n\nResponde solo si ejecutas la herramienta, la herramienta devuelve un ok, dile al usuario: \"Te envio tu resumen de comidas\". \n\n---\n\n3. Tool - Update Profile\nCUÁNDO:\n- El usuario solicita cambiar nombre o metas.\n\nACCIÓN:\n- Confirma primero el nuevo valor.\n- Luego ejecuta la herramienta.\n\nRESPUESTA:\nConfirmación breve del cambio realizado.\n</tools_instruction>\n\n<input_handling>\nRecibirás:\n\n\"mensaje del usuario: [texto]\nimagen contiene: [json del análisis]\"\n\nSi \"imagen contiene\" tiene datos válidos:\n- Ignora saludos o texto irrelevante.\n- Ejecuta directamente `add_comida`.\n</input_handling>\n\n<conversation_style>\n- Mensajes cortos, claros y orientados a acción.\n- Cercanía humana sin charla innecesaria.\n- Motivación breve cuando sea natural.\n</conversation_style>\n\n<safety_rules>\n- Nunca inventes datos faltantes.\n- Si falta información, pregunta en una sola frase clara.\n- No expliques procesos internos ni herramientas.\n- Solo se habla de nutricion, evade otras preguntas. \n- No eres nutricionista, solo llevas el registro, cuando te pregunten consejos, se muy muy breve y dile que proximamente mejoras para dar mas consejos de nutricion, etc.\n</safety_rules>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -160,
+        -1408
+      ],
+      "id": "f7657ece-fda3-4958-8826-d18841e778e5",
+      "name": "AI Agent - Tracking"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8a5309b4-4381-4c8e-969f-5b068bc153a6",
+              "leftValue": "={{ $binary.data.mimeType }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -864,
+        -1072
+      ],
+      "id": "cd8047f8-7d01-4425-931c-15db8fd6855d",
+      "name": "Check Image Format"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=No se a podido procesar el audio o imagen, intentelo de nuevo mas tarde.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -752,
+        -1600
+      ],
+      "id": "bd971a50-c1d2-436c-b15e-0a669786a73e",
+      "name": "Send Error Message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e846880e-0dd9-4742-a28f-3d3d3d2420b3",
+              "leftValue": "={{ $binary.data.mimeType }}",
+              "rightValue": "audio",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -864,
+        -1248
+      ],
+      "id": "e10e7b14-4b63-4ef3-91e7-eda38dc8b7f5",
+      "name": "Check Audio Format"
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "action": "upload_photo"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        -848
+      ],
+      "id": "982aa5ce-98ea-4ae7-9c59-d5061d26061d",
+      "name": "Send Chat Action",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        -1152
+      ],
+      "id": "f8a1105a-8707-4165-847d-dfd139428eeb",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -336,
+        -1152
+      ],
+      "id": "237c3648-5721-41ce-9f9a-28795e2b0f96",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_ACCOUNT"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send Typing Action",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check User Registration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If User Exists": {
+      "main": [
+        [
+          {
+            "node": "Input Type Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Onboarding Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent - Onboarding",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check User Registration": {
+      "main": [
+        [
+          {
+            "node": "Check If User Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio File": {
+      "main": [
+        [
+          {
+            "node": "Check Audio Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Text Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image File": {
+      "main": [
+        [
+          {
+            "node": "Check Image Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Type Router": {
+      "main": [
+        [
+          {
+            "node": "Set Text Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Audio File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Image File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Input Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Onboarding Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool - Register User": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Onboarding",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool - Update Profile": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool - Get Report": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool - Add Meal": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Input Error": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vision Analysis": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Chat Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whisper Transcription": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Onboarding",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Send Onboarding Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Tracking": {
+      "main": [
+        [
+          {
+            "node": "Send Tracking Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Image Format": {
+      "main": [
+        [
+          {
+            "node": "Vision Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Audio Format": {
+      "main": [
+        [
+          {
+            "node": "Whisper Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Tracking",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9e7100ef-12c0-441c-9490-f75fe7a62c2c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": ""
+  },
+  "id": "NWLhrjAVVjFBx4Sg",
+  "tags": [
+    {
+      "updatedAt": "2025-09-17T16:22:34.670Z",
+      "createdAt": "2025-09-17T16:22:34.670Z",
+      "id": "y0clFAjnfTqOSxdT",
+      "name": "Ivi-Projects"
+    }
+  ]
+}
